@@ -1,5 +1,5 @@
 import { set } from 'lodash';
-import { getModule, addEnvMemory, templateReplaceMemory, addNpmPackageMemory } from '../utils';
+import { getModule, addEnvMemory, replaceCodeMemory, templateReplaceMemory, addNpmPackageMemory } from '../utils';
 
 export default async function generateSqlDatabase(params) {
   switch (params.framework) {
@@ -14,7 +14,14 @@ export default async function generateSqlDatabase(params) {
         set(params, ['build', 'knexfile.js'], await getModule('database/sql/knexfile.js'));
       }
 
-      templateReplaceMemory(params, 'knexfile.js', { dialect: params.database });
+      // Set knex.js SQL dialect
+      let dialect;
+      if (params.database === 'postgresql') {
+        dialect = 'pg';
+      } else {
+        dialect = params.database;
+      }
+      templateReplaceMemory(params, 'knexfile.js', { dialect: dialect });
 
       addEnvMemory(params, {
         DB_HOST: 'localhost',

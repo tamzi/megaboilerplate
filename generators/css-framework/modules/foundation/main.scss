@@ -49,6 +49,7 @@
 html {
   position: relative;
   min-height: 100%;
+  height: auto;
 }
 
 body {
@@ -141,6 +142,15 @@ footer {
   }
 }
 
+.button.github {
+  background-color: #444;
+  transition: background-color 0.25s ease-out, color 0.25s ease-out;
+  &:hover,
+  &:focus {
+    background-color: scale-color(#444, $lightness: -15%)
+  }
+}
+
 // Top bar
 // -------------------------
 
@@ -167,7 +177,7 @@ footer {
 }
 
 .top-bar-title {
-  margin: 1rem 1rem 0;
+  margin: 1rem 1rem 1rem;
   > a {
     margin-left: 10px;
   }

@@ -46,15 +46,21 @@ export default async function generateJsFrameworkAngularJs(params) {
         set(params.build, ['app', 'partials', 'reset.html'], await getModule(`js-framework/angularjs/partials/reset-${params.cssFramework}.html`));
         set(params.build, ['app', 'partials', 'signup.html'], await getModule(`js-framework/angularjs/partials/signup-${params.cssFramework}.html`));
 
-        templateReplaceMemory(params, 'app/app.js', {
-          satellizer: params.authentication.length ? `, 'satellizer'` : null
-        });
-
         const headerAuthIndent = { none: 2, bootstrap: 3, foundation: 2 };
         await replaceCodeMemory(params, 'app/partials/header.html', 'HEADER_AUTH', await getModule(`js-framework/angularjs/partials/header-auth-${params.cssFramework}.html`), {
           indentLevel: headerAuthIndent[params.cssFramework]
         });
+        
+        // Initialize Foundation JS components
+        if (params.cssFramework === 'foundation') {
+          await replaceCodeMemory(params, 'app/controllers/header.js', 'FOUNDATION_INIT', await getModule('css-framework/foundation/foundation-init.js'));
+        }
       }
+
+      // Optionally add satellizer module dependency
+      templateReplaceMemory(params, 'app/app.js', {
+        satellizer: params.authentication.length ? `, 'satellizer'` : ''
+      });
       break;
     case 'meteor':
       break;

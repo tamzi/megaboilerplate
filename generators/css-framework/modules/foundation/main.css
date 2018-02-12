@@ -4,6 +4,7 @@
 html {
   position: relative;
   min-height: 100%;
+  height: auto;
 }
 
 body {
@@ -103,6 +104,16 @@ footer {
   background-color: #4b6b8b;
 }
 
+.button.github {
+  background-color: #444;
+  transition: background-color 0.25s ease-out, color 0.25s ease-out;
+}
+
+.button.github:hover,
+.button.github:focus {
+  background-color: #262626;
+}
+
 /* Top bar
 /* ------------------------- */
 
@@ -133,7 +144,7 @@ footer {
 }
 
 .top-bar-title {
-  margin: 1rem 1rem 0;
+  margin: 1rem 1rem 1rem;
 }
 
 .top-bar-title > a {

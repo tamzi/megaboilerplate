@@ -22,6 +22,7 @@ var userSchema = new mongoose.Schema({
   facebook: String,
   twitter: String,
   google: String,
+  github: String,
   vk: String
 }, schemaOptions);
 
@@ -49,6 +50,14 @@ userSchema.virtual('gravatar').get(function() {
   var md5 = crypto.createHash('md5').update(this.get('email')).digest('hex');
   return 'https://gravatar.com/avatar/' + md5 + '?s=200&d=retro';
 });
+
+userSchema.options.toJSON = {
+  transform: function(doc, ret, options) {
+    delete ret.password;
+    delete ret.passwordResetToken;
+    delete ret.passwordResetExpires;
+  }
+};
 
 var User = mongoose.model('User', userSchema);
 

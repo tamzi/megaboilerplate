@@ -459,6 +459,20 @@ To use any of the included OAuth providers (e.g. Facebook, Twitter, Google), you
 
 **Note**: If you are using React or AngularJS, copy and paste **Secure key** into `.env` file and **Application ID** into *app/actions/oauth.js* (React) and *app/app.js* (AngularJS).
 
+<img src="https://upload.wikimedia.org/wikipedia/commons/2/24/GitHub_logo_2013_padded.svg" width="200">
+- Go to [Github Developer Applications Settings](https://github.com/settings/developers)
+- Click on **Register a new application** button.
+- Fill out required fields.
+ - **Application Name**
+ - **Homepage URL**
+ - **Callback URL**: `http://127.0.0.1:3000/auth/github/callback`
+- Click on **Register application**
+- Copy and paste **client ID** and **client secret** keys into `.env` file:
+  - `GITHUB_ID='YOUR_CLIENT_ID'`
+  - `GITHUB_SECRET='YOUR_CLIENT_SECRET'`
+
+**Note**: If you are using React or AngularJS, copy and paste **client secret** into `.env` file and **client ID** into *app/actions/oauth.js* (React) and *app/app.js* (AngularJS).
+
 :top: <sub>[**back to top**](#table-of-contents)</sub>
 
 Learning Resources
@@ -742,7 +756,13 @@ heroku git:remote -a your-heroku-app-name
 
 For more information, please visit [Getting Started on Heroku with Node.js](https://devcenter.heroku.com/articles/getting-started-with-nodejs#introduction).
 
-**TODO:** Deployment instructions for SQL and MongoDB databases. (Heroku PostgresL, Compose, MongoLab)
+#### Heroku + PostgreSQL
+
+Connecting to a [Heroku Postgres](https://postgres.heroku.com) database from outside of the Heroku network requires SSL. Furthermore, connection string given by Heroku (`DATABASE_URL`) does not have `"?ssl=true"` parameter by default.
+
+The simplest solution is to add `PGSSLMODE=require` config var in the Heroku dashboard or via CLI: `heroku config:set PGSSLMODE=require`.
+
+**TODO:** Deployment instructions for SQL and MongoDB databases. (~~Heroku Postgres~~, Compose, MongoLab)
 
 ### Microsoft Azure
 <img src="https://worldvectorlogo.com/logos/microsoft-azure-2.svg" width="200">

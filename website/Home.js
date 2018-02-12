@@ -72,12 +72,6 @@ class Home extends React.Component {
         frameworkValidationError: 'Please select a framework.',
         generateDownloadLinkInProgress: false
       });
-    } else if (state.platform === 'node' && !state.templateEngine) {
-      console.info('Please select a template engine.');
-      return this.setState({
-        templateEngineValidationError: 'Please select a template engine.',
-        generateDownloadLinkInProgress: false
-      });
     } else if (state.platform === 'node' && !state.cssFramework) {
       console.info('Please select a CSS framework.');
       return this.setState({
@@ -94,6 +88,13 @@ class Home extends React.Component {
       console.info('Please make a selection.');
       return this.setState({
         jsFrameworkValidationError: 'Please make a selection.',
+        generateDownloadLinkInProgress: false
+      });
+
+    } else if (state.platform === 'node' && !state.templateEngine && state.jsFramework !== 'angularjs') {
+      console.info('Please select a template engine.');
+      return this.setState({
+        templateEngineValidationError: 'Please select a template engine.',
         generateDownloadLinkInProgress: false
       });
     } else if (state.platform === 'node' && state.jsFramework !== 'none' && !state.buildTool) {
@@ -124,8 +125,8 @@ class Home extends React.Component {
 
     // Show download button spinner
     if (!options.generateDownloadLink) {
-     this.setState({ isDownloadLoading: true });
-   }
+      this.setState({ isDownloadLoading: true });
+    }
 
     // Show next steps component
     this.setState({ showNextSteps: true });
@@ -416,7 +417,8 @@ class Home extends React.Component {
         const requiresEmail = (
           state.authentication.has('facebook') ||
           state.authentication.has('google') ||
-          state.authentication.has('twitter')
+          state.authentication.has('twitter') ||
+          state.authentication.has('github')
         );
 
         if (isChecked) {
@@ -426,13 +428,15 @@ class Home extends React.Component {
             state.authentication.clear();
           } else {
             state.authentication.add(value);
-            if (value === 'facebook' || value === 'google' || value === 'twitter') {
+            if (value === 'facebook' || value === 'google' || value === 'twitter' || value === 'github') {
               state.authentication.add('email');
             }
           }
           state.authenticationValidationError = null;
         } else {
-          if (value === 'email' && requiresEmail) { return; }
+          if (value === 'email' && requiresEmail) {
+            return;
+          }
           state.authentication.delete(value);
         }
         break;
@@ -462,7 +466,7 @@ class Home extends React.Component {
     this.setState({ disableAutoScroll: event.target.checked });
     try {
       localStorage.setItem('disableAutoScroll', event.target.checked);
-    } catch(e) {
+    } catch (e) {
       console.warn(e);
     }
   }
@@ -509,7 +513,7 @@ class Home extends React.Component {
         <li>
           <div className="checkbox">
             <label>
-              <input type="checkbox" name="beginner" value="beginner" onChange={this.handleChange} checked={state.beginner} />
+              <input type="checkbox" name="beginner" value="beginner" onChange={this.handleChange} checked={state.beginner}/>
               <span>Beginner</span>
             </label>
           </div>
@@ -524,7 +528,8 @@ class Home extends React.Component {
         </li>
         <li className="pull-right">
           <div className="checkbox">
-            <a href="https://www.codementor.io/sahatyalkabov?utm_source=github&utm_medium=button&utm_term=sahatyalkabov&utm_campaign=github" target="_blank"><img src="https://cdn.codementor.io/badges/book_session_github.svg" alt="Book session on Codementor"/></a>          </div>
+            <a href="https://www.codementor.io/sahatyalkabov?utm_source=github&utm_medium=button&utm_term=sahatyalkabov&utm_campaign=github" target="_blank"><img src="https://cdn.codementor.io/badges/book_session_github.svg" alt="Book session on Codementor"/></a>
+          </div>
         </li>
       </ul>
     );
@@ -545,11 +550,7 @@ class Home extends React.Component {
       <Framework {...state} handleChange={this.handleChange}/>
     ) : null;
 
-    const templateEngine = state.framework ? (
-      <TemplateEngine {...state} handleChange={this.handleChange}/>
-    ) : null;
-
-    const cssFramework = state.templateEngine ? (
+    const cssFramework = state.framework ? (
       <CssFramework {...state} handleChange={this.handleChange}/>
     ) : null;
 
@@ -557,8 +558,12 @@ class Home extends React.Component {
       <CssPreprocessor {...state} handleChange={this.handleChange}/>
     ) : null;
 
-    const jsFramework = state.cssPreprocessor  && state.platform === 'node' ? (
+    const jsFramework = state.cssPreprocessor && state.platform === 'node' ? (
       <JsFramework {...state} handleChange={this.handleChange}/>
+    ) : null;
+
+    const templateEngine = state.jsFramework && state.jsFramework !== 'angularjs' ? (
+      <TemplateEngine {...state} handleChange={this.handleChange}/>
     ) : null;
 
     const buildTool = (state.jsFramework || (state.jsFramework && state.cssPreprocessor)) && state.platform === 'node' ? (
@@ -593,12 +598,12 @@ class Home extends React.Component {
         <path fill={loadingSvgColor} d="M26.013,10.047l1.654-2.866c-2.198-1.272-4.743-2.012-7.466-2.012h0v3.312h0
           C22.32,8.481,24.301,9.057,26.013,10.047z">
           <animateTransform attributeType="xml"
-            attributeName="transform"
-            type="rotate"
-            from="0 20 20"
-            to="360 20 20"
-            dur="0.5s"
-            repeatCount="indefinite"/>
+                            attributeName="transform"
+                            type="rotate"
+                            from="0 20 20"
+                            to="360 20 20"
+                            dur="0.5s"
+                            repeatCount="indefinite"/>
         </path>
       </svg>
     );
@@ -631,29 +636,21 @@ class Home extends React.Component {
       );
     } else {
       generateDownloadLink = (
-        <p onClick={this.handleGenerateDownloadLink.bind(this)} className="text-center">or <a href="#" type="button">Generate Download Link</a></p>
+        <div>
+          <p onClick={this.handleGenerateDownloadLink.bind(this)} className="text-center">or <a href="#" type="button">Generate Download Link</a></p>
+        </div>
       );
     }
 
     const downloadText = state.isDownloadLoading ? loadingSvg : (
       <span><i className="fa fa-download"></i> Compile and Download</span>
     );
-    const download = state.deployment || state.staticSiteGenerator || state.platform === 'library' ? (
+    const download = state.deployment || state.staticSiteGenerator || state.platform === 'library' || state.platform === 'electron' ? (
       <div>
         <button ref="downloadBtn" className="btn btn-block btn-mega btn-success" onClick={this.clickDownload}>{downloadText}</button>
         {generateDownloadLink}
       </div>
     ) : null;
-
-    const consulting = (
-      <VelocityComponent runOnMount animation="transition.slideLeftIn" duration={900}>
-        <div className="panel" style={{ opacity: 0 }}>
-          <div className="panel-body">
-            <i className="fa fa-calendar"></i> Looking for additional help? <a href="https://calendly.com/sahat" target="_blank">I am available</a> for business consulting. Rates may vary.
-          </div>
-        </div>
-      </VelocityComponent>
-    );
 
     const nextSteps = state.showNextSteps ? (
       <NextSteps {...state}/>
@@ -668,18 +665,18 @@ class Home extends React.Component {
           <div ref="framework">{framework}</div>
           <div ref="staticSiteGenerator">{staticSiteGenerator}</div>
           <div ref="jsLibrary">{jsLibrary}</div>
-          <div ref="templateEngine">{templateEngine}</div>
           <div ref="cssFramework">{cssFramework}</div>
           <div ref="cssPreprocessor">{cssPreprocessor}</div>
           <div ref="jsFramework">{jsFramework}</div>
+          <div ref="templateEngine">{templateEngine}</div>
           <div ref="buildTool">{buildTool}</div>
           <div ref="testing">{testing}</div>
           <div ref="database">{database}</div>
           <div ref="authentication">{authentication}</div>
           <div ref="deployment">{deployment}</div>
-          <div ref="consulting">{consulting}</div>
           <div ref="download">{download}</div>
           <div ref="nextSteps">{nextSteps}</div>
+
         </main>
         <Footer />
 
@@ -687,56 +684,32 @@ class Home extends React.Component {
           <div className="modal-dialog" role="document">
             <div className="modal-content">
               <div className="modal-header">
-                <button type="button" className="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
+                <button type="button" className="close" data-dismiss="modal"><span aria-hidden="true">&times;</span>
+                </button>
                 <h4 className="modal-title" id="myModalLabel"><i className="fa fa-globe"></i> Live Demos</h4>
               </div>
               <div className="modal-body">
                 <a href="http://megaboilerplate-demo1.azurewebsites.net/" className="demo-container demo1" target="_blank">
-                  <p><span><strong>Demo 1</strong> - Traditional Express web app</span> <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/recommended.svg" alt="Recommended" /></p>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/node-icon.png" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/jade-logo.svg" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/bootstrap-logo.svg" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/sass-logo.svg" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/mocha.svg" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/mongodb-logo.svg" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/facebook-logo.svg" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/google-logo.svg" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/twitter-logo.svg" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/vk-logo.svg" height="25"/>
+                  <p><span><strong>Demo 1</strong> - Traditional Express web app</span>
+                    <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/recommended.svg" alt="Recommended"/>
+                  </p>
+                  <span className="text-normal">Node - Jade - Bootstrap - Sass - Mocha - MongoBD - Facebook - Google - Twitter - VK</span>
                 </a>
                 <a href="http://megaboilerplate-demo2.azurewebsites.net/" className="demo-container demo2" target="_blank">
                   <p><span><strong>Demo 2</strong> - MEAN stack</span></p>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/node-icon.png" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/handlebars-logo.svg" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/foundation-logo.png" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/angularjs-logo.svg" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/gulp-logo.svg" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/jasmine.svg" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/mongodb-logo.svg" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/facebook-logo.svg" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/google-logo.svg" height="25"/>
+                  <span className="text-normal">Node - Handlebars - Foundation - AngularJS - Gulp - Jasmine - MongoDB - Facebook - Google</span>
                 </a>
                 <a href="http://megaboilerplate-demo3.azurewebsites.net/ " className="demo-container demo3" target="_blank">
                   <p><span><strong>Demo 3</strong> - Full-stack React app (unstyled)</span></p>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/node-icon.png" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/nunjucks-logo.png" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/cssnext-logo.svg" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/postcss.svg" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/react-logo.svg" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/webpack-logo.svg" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/mocha.svg" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/sqlite-logo.svg" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/twitter-logo.svg" height="25"/>
+                  <span className="text-normal">Node - Nunjucks - CSSNext - PostCSS - React - Webpack - Mocha - SQLite - Twitter</span>
                 </a>
                 <a href="https://github.com/sahat/megaboilerplate/tree/master/examples/jekyll#mega-boilerplate-jekyll-blog-example" className="demo-container demo4" target="_blank">
                   <p><span><strong>Demo 4</strong> - Jekyll blo</span>g</p>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/ruby-logo.svg" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/jekyll-logo.svg" height="25"/>
+                  <span className="text-normal">Ruby - Jekyll</span>
                 </a>
                 <a href="https://github.com/sahat/megaboilerplate/tree/master/examples/middleman#mega-boilerplate-middleman-site-example" className="demo-container demo5" target="_blank">
                   <p><span><strong>Demo 5</strong> - Middleman static site</span></p>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/ruby-logo.svg" height="25"/>
-                  <img src="https://megaboilerplate.blob.core.windows.net/megaboilerplate/img/svg/middleman-logo.svg" height="25"/>
+                  <span className="text-normal">Ruby - Middleman</span>
                 </a>
               </div>
             </div>

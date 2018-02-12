@@ -14,6 +14,10 @@ export default async function generateTestingMocha(params) {
         // Server-side tests
         set(params, ['build', 'test', 'server', 'app.test.js'], await getModule('testing/mocha/app.test-json.js'));
 
+        // Default NPM scripts for both server and client tests
+        await addNpmScriptMemory('test', 'npm run test:server && npm run test:client', params);
+        await addNpmScriptMemory('test:server', 'mocha --recursive', params);
+
         // Client-side tests
         switch (params.jsFramework) {
           case 'react':
@@ -33,22 +37,26 @@ export default async function generateTestingMocha(params) {
 
             await addNpmScriptMemory('test', 'npm run test:client && npm run test:server', params);
             await addNpmScriptMemory('test:client', 'mocha test/client --recursive --compilers js:babel-register', params);
-            await addNpmScriptMemory('test:server', 'mocha test/server --recursive', params);
+            await addNpmScriptMemory('test:server', 'mocha test/server --recursive --compilers js:babel-register', params);
             break;
           case 'angularjs':
+            let karmaConfPath;
+
             if (params.buildTool === 'gulp') {
-              set(params.build, ['app', 'karma.conf.js'], await getModule('testing/angularjs/karma.conf.js'));
+              karmaConfPath = ['app', 'karma.conf.js'];
+              set(params.build, karmaConfPath, await getModule('testing/angularjs/karma.conf.js'));
               set(params.build, ['app', 'test', 'unit', 'controllers', 'contact.test.js'], await getModule('testing/mocha/angularjs/unit/contact.test.js'));
               await addNpmScriptMemory('test:client', 'karma start app/karma.conf.js --single-run', params);
             } else {
-              set(params.build, ['karma.conf.js'], await getModule('testing/angularjs/karma.conf-nobuild.js'));
+              karmaConfPath = ['karma.conf.js'];
+              set(params.build, karmaConfPath, await getModule('testing/angularjs/karma.conf-nobuild.js'));
               set(params.build, ['public', 'js', 'test', 'unit', 'controllers', 'contact.test.js'], await getModule('testing/mocha/angularjs/unit/contact.test.js'));
               await addNpmScriptMemory('test:client', 'karma start --single-run', params);
             }
 
-            await replaceCodeMemory(params, 'app/karma.conf.js', 'KARMA_TESTS', await getModule('testing/angularjs/karma-tests-mocha.js'));
-            await replaceCodeMemory(params, 'app/karma.conf.js', 'KARMA_PLUGINS', await getModule('testing/angularjs/karma-plugins-mocha.js'));
-            await replaceCodeMemory(params, 'app/karma.conf.js', 'KARMA_FRAMEWORKS', await getModule('testing/angularjs/karma-frameworks-mocha.js'));
+            await replaceCodeMemory(params, karmaConfPath.join('/'), 'KARMA_TESTS', await getModule('testing/angularjs/karma-tests-mocha.js'));
+            await replaceCodeMemory(params, karmaConfPath.join('/'), 'KARMA_PLUGINS', await getModule('testing/angularjs/karma-plugins-mocha.js'));
+            await replaceCodeMemory(params, karmaConfPath.join('/'), 'KARMA_FRAMEWORKS', await getModule('testing/angularjs/karma-frameworks-mocha.js'));
 
             await addNpmPackageMemory('karma', params, true);
             await addNpmPackageMemory('karma-chai', params, true);
@@ -60,9 +68,6 @@ export default async function generateTestingMocha(params) {
           default:
             break;
         }
-        // NPM scripts for both server and client tests
-        await addNpmScriptMemory('test', 'npm run test:server && npm run test:client', params);
-        await addNpmScriptMemory('test:server', 'mocha --recursive', params);
       } else {
         // Server-side tests
         set(params, ['build', 'test', 'app.test.js'], await getModule('testing/mocha/app.test.js'));
